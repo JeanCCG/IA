@@ -165,20 +165,10 @@ void drawPoint(float x, float y, float color[]) {
 // Función para dibujar el botón
 void drawButton() {
   if (buttonPressed) {
-    for (int i = 0; i < 441 * cant / 100;) {
-      int temp = rand() % 441;
-      bool posib1 = puntos[temp].x == x0 && puntos[temp].y == y0;
-      bool posib2 = puntos[temp].x == x1 && puntos[temp].y == y1;
-      if (!posib1 && !posib2 &&
-          find(temp2.begin(), temp2.end(), temp) == temp2.end()) {
-        puntos_v[temp] = -1;
-        temp2.push_back(temp);
-        selec_aristas(aristas, aristas_v, puntos[temp].x, puntos[temp].y);
-        i++;
-      }
-    }
+    glColor3fv(colors[2]);
+  } else {
+    glColor3fv(buttonColor);
   }
-  glColor3fv(buttonColor);
   glBegin(GL_QUADS);
   glVertex2i(buttonX, buttonY);
   glVertex2i(buttonX + buttonWidth, buttonY);
@@ -220,12 +210,11 @@ void drawScene() {
   glutSwapBuffers();
 }
 void mouseClick(int button, int state, int x, int y) {
-  srand(time(NULL));
   if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
     // Verificar si se hizo clic en el botón
     if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY &&
         y <= buttonY + buttonHeight) {
-      buttonPressed = true;
+      buttonPressed = !buttonPressed;
       glutPostRedisplay();
     }
   }
