@@ -123,8 +123,8 @@ void HillClimbing(vector<punto> puntos, vector<arista> aristas,
 vector<vector<int>> grafico(21, vector<int>(21, 0));
 vector<punto> puntos;
 vector<arista> aristas;
-vector<int> aristas_v(aristas.size());
-vector<int> puntos_v(puntos.size());
+vector<int> aristas_v(1640);
+vector<int> puntos_v(441);
 int x0 = 40, y0 = 0;
 int x1 = 130, y1 = 150;
 int cant = 20;
@@ -132,6 +132,9 @@ vector<int> temp2;
 // Dimensiones de la ventana
 int windowWidth = 1600;
 int windowHeight = 900;
+
+// Texto ingresado por el usuario
+std::string userInput = "";
 
 // Número de filas y columnas
 int rows = 20;
@@ -153,6 +156,15 @@ int buttonWidth = 100;
 int buttonHeight = 50;
 int buttonX = 50;
 int buttonY = windowHeight / 2 - buttonHeight / 2;
+
+// Función para dibujar texto en la pantalla
+void drawText(float x, float y, std::string text) {
+  glRasterPos2f(x, y);
+  for (char& c : text) {
+    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, c);
+  }
+}
+
 // Función para dibujar un punto
 void drawPoint(float x, float y, float color[]) {
   glColor3fv(color);
@@ -165,9 +177,19 @@ void drawPoint(float x, float y, float color[]) {
 // Función para dibujar el botón
 void drawButton() {
   if (buttonPressed) {
-    glColor3fv(colors[2]);
-  } else {
-    glColor3fv(buttonColor);
+    srand(time(NULL));
+    for (int i = 0; i < 441 * cant / 100;) {
+      int temp = rand() % 440;
+      bool posib1 = puntos[temp].x == x0 && puntos[temp].y == y0;
+      bool posib2 = puntos[temp].x == x1 && puntos[temp].y == y1;
+      if (!posib1 && !posib2 &&
+          find(temp2.begin(), temp2.end(), temp) == temp2.end()) {
+        puntos_v[temp] = -1;
+        temp2.push_back(temp);
+        selec_aristas(aristas, aristas_v, puntos[temp].x, puntos[temp].y);
+        i++;
+      }
+    }
   }
   glBegin(GL_QUADS);
   glVertex2i(buttonX, buttonY);
@@ -176,7 +198,14 @@ void drawButton() {
   glVertex2i(buttonX, buttonY + buttonHeight);
   glEnd();
 }
-
+void keyboard(unsigned char key, int x, int y) {
+  if (key == 13) {      // ASCII de la tecla Enter
+    userInput += "\n";  // Agregar una nueva línea
+  } else {
+    userInput += key;  // Agregar el carácter ingresado
+  }
+  glutPostRedisplay();
+}
 // Función para dibujar la escena
 void drawScene() {
   glClear(GL_COLOR_BUFFER_BIT);
@@ -189,6 +218,7 @@ void drawScene() {
   }
   // Dibujar botón
   drawButton();
+  drawText(10.0f, windowHeight - 30.0f, userInput);
   // Dibujar puntos
   float stepX = windowWidth / static_cast<float>(cols);
   float stepY = windowHeight / static_cast<float>(rows);
@@ -235,6 +265,7 @@ int main(int argc, char** argv) {
       }
     }
   }
+
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
   glutInitWindowSize(windowWidth, windowHeight);
@@ -246,6 +277,7 @@ int main(int argc, char** argv) {
           1);  // Ajusta la matriz de proyección
 
   glutDisplayFunc(drawScene);
+  glutKeyboardFunc(keyboard);
   glutMouseFunc(mouseClick);
   glutMainLoop();
 
