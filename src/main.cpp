@@ -378,6 +378,20 @@ void mouseClick(int button, int state, int x, int y) {
       submitButtonPressed = !submitButtonPressed;
       glutPostRedisplay();
     }
+    float stepX = windowWidth / static_cast<float>(cols);
+    float stepY = windowHeight / static_cast<float>(rows);
+    for (int i = 0; i < rows; ++i) {
+      for (int j = 0; j < cols; ++j) {
+        float pointX = j * stepX + stepX / 2.0f + windowWidth / 3;
+        float pointY = windowHeight - (i * stepY + stepY / 2.0f);
+        if (x >= pointX - point_radius && x <= pointX + point_radius &&
+            y >= pointY - point_radius && y <= pointY + point_radius) {
+          grafico[i][j] = 2;  // Cambiar el color del punto a azul
+          glutPostRedisplay();
+          return;
+        }
+      }
+    }
   }
 }
 // Función principal
