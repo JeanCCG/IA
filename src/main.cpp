@@ -9,7 +9,9 @@
 #include <sstream>
 #include <vector>
 
+#include "funciones.h"
 using namespace std;
+
 // Función para convertir una variable a string
 template <typename T>
 std::string toString(T val) {
@@ -17,124 +19,44 @@ std::string toString(T val) {
   oss << val;
   return oss.str();
 }
-// Estructuras punto
-struct punto;
-float distancia(int, int, int, int);
-// Estructura arista
-struct arista {
-  punto* origen;
-  punto* destino;
-  float distancia;
-  arista(punto* origen, punto* destino, float distancia)
-      : origen(origen), destino(destino), distancia(distancia) {}
-};
-// Estructura punto
-struct punto {
-  int x;
-  int y;
-  punto(int x = 0, int y = 0) : x(x), y(y) {}
-};
-
-// Funciones
-float distancia(int x1, int x2, int y1, int y2) {
-  float pt1 = pow(x1 - x2, 2);
-  float pt2 = pow(y1 - y2, 2);
-  float temp = sqrt(pt1 + pt2);
-  return temp;
-}
-
-// Inicializar puntos
-void cpuntos(vector<punto>& puntos) {
-  for (int i = 0; i <= 200; i += 10) {
-    for (int j = 0; j <= 200; j += 10) {
-      punto temp(i, j);
-      puntos.push_back(temp);
-    }
-  }
-}
-
-// Si nodo tiene aristas disponibles
-bool aristas_disp(vector<arista> aristas, vector<int> aristas_v, int x, int y) {
-  for (int i = 0; i < aristas.size(); i++) {
-    bool casox = aristas[i].destino->x == x && aristas[i].destino->y == y;
-    bool casoy = aristas[i].origen->x == x && aristas[i].origen->y == y;
-    if (aristas_v[i] == 0 && (casox || casoy)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// Seleccionar aristas
-void selec_aristas(vector<arista> aristas, vector<int>& aristas_v, int x,
-                   int y) {
-  for (int i = 0; i < aristas.size(); i++) {
-    bool casox = aristas[i].destino->x == x && aristas[i].destino->y == y;
-    bool casoy = aristas[i].origen->x == x && aristas[i].origen->y == y;
-    if (casox || casoy) {
-      aristas_v[i] = -1;
-    }
-  }
-}
-
-// Marcar puntos
-bool marcar_p(vector<punto> puntos, vector<int>& puntos_v, int x, int y) {
-  for (int i = 0; i < puntos.size(); i++) {
-    if (puntos[i].x == x && puntos[i].y == y) {
-      puntos_v[i] = 1;
-      i = puntos.size();
-    }
-  }
-  return true;
-}
 
 // Hill Climbing
-void HillClimbing(vector<punto> puntos, vector<arista> aristas,
-                  vector<int>& puntos_v, vector<int>& aristas_v, float& dist,
+void HillClimbing(vector<punto> puntos, vector<int>& puntos_v, float& dist,
                   int x0, int y0, int x1, int y1) {
-  while (marcar_p(puntos, puntos_v, x0, y0) && (y0 != y1 || x0 != x1) &&
-         aristas_disp(aristas, aristas_v, x0, y0)) {
-    float dist_temp = INT_MAX, i_temp, x_temp, y_temp, suma = -1;
-    for (int i = 0; i < aristas_v.size(); i++) {
-      bool casox = aristas[i].destino->x == x0 && aristas[i].destino->y == y0;
-      bool casoy = aristas[i].origen->x == x0 && aristas[i].origen->y == y0;
-      if (aristas_v[i] == 0 && casox &&
-          distancia(x1, aristas[i].origen->x, aristas[i].origen->y, y1) <
-              dist_temp) {
-        dist_temp =
-            distancia(x1, aristas[i].origen->x, aristas[i].origen->y, y1);
+  int sw = 1;
+  while (sw && (y0 != y1 || x0 != x1)) {
+    float dist_temp = INT_MAX, i_temp, x_temp, y_temp, suma = 0;
+    sw = 0;
+    for (int i = 0; i < puntos.size(); i++) {
+      bool casox = abs(puntos[i].x - x0) <= 10;
+      bool casoy = abs(puntos[i].y - y0) <= 10;
+      bool casoz = puntos[i].x == x0 && puntos[i].y == y0;
+      bool casod = distancia(x1, puntos[i].x, puntos[i].y, y1) < dist_temp;
+      if (puntos_v[i] == 0 && casox && casoy && !casoz && casod) {
         i_temp = i;
-        suma = aristas[i].distancia;
-        x_temp = aristas[i].origen->x;
-        y_temp = aristas[i].origen->y;
-      } else if (aristas_v[i] == 0 && casoy &&
-                 distancia(x1, aristas[i].destino->x, aristas[i].destino->y,
-                           y1) < dist_temp) {
-        dist_temp =
-            distancia(x1, aristas[i].destino->x, aristas[i].destino->y, y1);
-        i_temp = i;
-        suma = aristas[i].distancia;
-        x_temp = aristas[i].destino->x;
-        y_temp = aristas[i].destino->y;
+        dist_temp = distancia(x1, puntos[i].x, puntos[i].y, y1);
+        suma = distancia(x0, puntos[i].x, puntos[i].y, y0);
+        x_temp = puntos[i].x;
+        y_temp = puntos[i].y;
+        sw = 1;
       }
     }
     x0 = x_temp;
     y0 = y_temp;
-    aristas_v[i_temp] = 1;
+    puntos_v[i_temp] = 1;
     dist += suma;
   }
 }
 
-// CODE
+// Variables globales
 vector<vector<int>> grafico(21, vector<int>(21, 0));
 vector<punto> puntos;
-vector<arista> aristas;
-vector<int> aristas_v(1640);
 vector<int> puntos_v(441);
-int x0 = 40, y0 = 0;
-int x1 = 130, y1 = 150;
+int x0 = -1, y0 = -1;
+int x1 = -1, y1 = -1;
 int cant = 20;
 vector<int> temp2;
+
 // Dimensiones de la ventana
 int windowWidth = 1600;
 int windowHeight = 900;
@@ -150,32 +72,34 @@ int cols = 20;
 int point_radius = 10.0f;
 int puntos_cant = 0;
 // Colores
-float colors[3][3] = {
+float colors[5][3] = {
     {1.0f, 1.0f, 1.0f},  // Blanco
     {0.0f, 0.0f, 0.0f},  // Negro
-    {1.0f, 0.0f, 0.0f}   // Rojo
+    {1.0f, 0.0f, 0.0f},  // Rojo
+    {0.0f, 0.0f, 1.0f},  // Azul
+    {0.0f, 1.0f, 0.0f}   // Verde
 };
 bool buttonPressed = false;
 bool button2Pressed = false;
 bool button3Pressed = false;
 
-float buttonColor[3] = {0.5f, 0.5f, 0.5f};  // Gris
-float lineColor[3] = {0.5f, 0.5f, 0.5f};    // Gris claro
-// Coordenadas del botón
+// Tamaño de un botón
 int buttonWidth = 100;
 int buttonHeight = 50;
+float buttonColor[3] = {0.5f, 0.5f, 0.5f};  // Gris
+
+// Color arista
+float lineColor[3] = {0.5f, 0.5f, 0.5f};  // Gris
+
+// Coordenadas del botón 1
 int buttonX = 50;
 int buttonY = windowHeight / 2 - buttonHeight / 2;
 
-// Tamaño y posición del segundo botón
-int button2Width = 100;
-int button2Height = 50;
+// Coordenadas del botón 2
 int button2X = 50;
 int button2Y = windowHeight / 2 - buttonHeight / 2 - buttonHeight - 20;
 
-// Tamaño y posición del tercer botón
-int button3Width = 100;
-int button3Height = 50;
+// Coordenadas del botón 3
 int button3X = 50;
 int button3Y = windowHeight / 2 - buttonHeight / 2 - 2 * (buttonHeight + 20);
 
@@ -216,8 +140,8 @@ void drawPoint(float x, float y, float color[]) {
 }
 
 // Función para dibujar una línea entre dos puntos
-void drawLine(float x1, float y1, float x2, float y2) {
-  glColor3fv(colors[0]);
+void drawLine(float x1, float y1, float x2, float y2, float color[]) {
+  glColor3fv(color);
   glBegin(GL_LINES);
   glVertex2f(x1, y1);
   glVertex2f(x2, y2);
@@ -226,17 +150,14 @@ void drawLine(float x1, float y1, float x2, float y2) {
 
 // Función para dibujar el botón
 void drawButton(int x, int y, int width, int height, float color[]) {
+  // Botón
   if (buttonPressed) {
     srand(time(NULL));
     for (int i = 0; i < 441 * cant / 100;) {
-      int temp = rand() % 440;
-      bool posib1 = puntos[temp].x == x0 && puntos[temp].y == y0;
-      bool posib2 = puntos[temp].x == x1 && puntos[temp].y == y1;
-      if (!posib1 && !posib2 &&
-          find(temp2.begin(), temp2.end(), temp) == temp2.end()) {
+      int temp = rand() % 441;
+      if (find(temp2.begin(), temp2.end(), temp) == temp2.end()) {
         puntos_v[temp] = -1;
         temp2.push_back(temp);
-        selec_aristas(aristas, aristas_v, puntos[temp].x, puntos[temp].y);
         i++;
       }
     }
@@ -244,30 +165,18 @@ void drawButton(int x, int y, int width, int height, float color[]) {
   }
   if (button2Pressed) {
     float dist = 0;
-    HillClimbing(puntos, aristas, puntos_v, aristas_v, dist, x0, y0, x1, y1);
+    HillClimbing(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10, y1 * 10);
     button2Pressed = !button2Pressed;
   }
   if (button3Pressed) {
     puntos.clear();
-    aristas.clear();
     temp2.clear();
     cpuntos(puntos);
-    aristas_v.assign(1640, 0);
     puntos_v.assign(441, 0);
     grafico.assign(21, vector<int>(21, 0));
-    // crear aristas
-    for (int i = 0; i < puntos.size(); i++) {
-      for (int j = i + 1; j < puntos.size(); j++) {
-        bool casox = abs(puntos[i].x - puntos[j].x) <= 10;
-        bool casoy = abs(puntos[i].y - puntos[j].y) <= 10;
-        if (casox && casoy) {
-          arista temp(
-              &puntos[i], &puntos[j],
-              distancia(puntos[i].x, puntos[j].x, puntos[i].y, puntos[j].y));
-          aristas.push_back(temp);
-        }
-      }
-    }
+    puntos_cant = 0;
+    x0 = -1, y0 = -1;
+    x1 = -1, y1 = -1;
     button3Pressed = !button3Pressed;
   }
   if (submitButtonPressed) {
@@ -307,48 +216,77 @@ void drawScene() {
       grafico[puntos[i].y / 10][puntos[i].x / 10] = -1;
     }
   }
-  // Dibujar botón 1
+
   drawButton(buttonX, buttonY, buttonWidth, buttonHeight, buttonColor);
-
-  // Dibujar botón 2
-  drawButton(button2X, button2Y, button2Width, button2Height, colors[2]);
-
-  // Dibujar botón 3
-  drawButton(button3X, button3Y, button3Width, button3Height, buttonColor);
+  drawButton(button2X, button2Y, buttonWidth, buttonHeight, colors[2]);
+  drawButton(button3X, button3Y, buttonWidth, buttonHeight, buttonColor);
 
   // Dibujar caja de texto
-
   drawText(buttonX + buttonWidth + 10, buttonY + buttonHeight / 3,
            "Borrar: " + toString(cant) + "%");
   drawButton(submitButtonX, submitButtonY, submitButtonWidth,
              submitButtonHeight, buttonColor);
   drawText(textBoxX + 5, textBoxY + 5, "Porcentaje: " + percentageInput);
+
   // Dibujar puntos
   float stepX = windowWidth / static_cast<float>(cols);
   float stepY = windowHeight / static_cast<float>(rows);
   for (int i = 0; i < rows; ++i) {
     for (int j = 0; j < cols; ++j) {
-      float x = j * stepX + stepX / 2.0f +
-                windowWidth / 3;  // Ubica los puntos a la derecha
+      float x = j * stepX + stepX / 2.0f + windowWidth / 3;
       float y = windowHeight - (i * stepY + stepY / 2.0f);
-      if (grafico[i][j] == 0 || grafico[i][j] == 1) {
-        if (j < cols - 1 && grafico[i][j + 1] != -1)  // Derecha
-          drawLine(x, y, x + stepX, y);
-        if (i < rows && i != 0 && grafico[i - 1][j] != -1)  // Arriba
-          drawLine(x, y, x, y + stepY);
+      if (grafico[i][j] != -1) {
+        if (j < cols - 1 && grafico[i][j + 1] != -1) {  // Arista Derecha
+          if ((grafico[i][j] == 0 && grafico[i][j + 1] == 1) ||
+              (grafico[i][j] == 1 && grafico[i][j + 1] == 0)) {
+            drawLine(x, y, x + stepX, y, colors[3]);
+          } else if (grafico[i][j] == 1 && grafico[i][j + 1] == 1) {
+            drawLine(x, y, x + stepX, y, colors[2]);
+          } else {
+            drawLine(x, y, x + stepX, y, colors[0]);
+          }
+        }
+        if (i < rows && i != 0 && grafico[i - 1][j] != -1) {  // Arista Arriba
+          if ((grafico[i][j] == 0 && grafico[i - 1][j] == 1) ||
+              (grafico[i][j] == 1 && grafico[i - 1][j] == 0)) {
+            drawLine(x, y, x, y + stepY, colors[3]);
+          } else if (grafico[i][j] == 1 && grafico[i - 1][j] == 1) {
+            drawLine(x, y, x, y + stepY, colors[2]);
+          } else {
+            drawLine(x, y, x, y + stepY, colors[0]);
+          }
+        }
         // Diagonalmente
         if (j < cols - 1 && i < rows && i != 0 &&
-            grafico[i - 1][j + 1] != -1)  // Arriba-derecha
-          drawLine(x, y, x + stepX, y + stepY);
+            grafico[i - 1][j + 1] != -1) {  // Arista Arriba-derecha
+          if ((grafico[i][j] == 0 && grafico[i - 1][j + 1] == 1) ||
+              (grafico[i][j] == 1 && grafico[i - 1][j + 1] == 0)) {
+            drawLine(x, y, x + stepX, y + stepY, colors[3]);
+          } else if (grafico[i][j] == 1 && grafico[i - 1][j + 1] == 1) {
+            drawLine(x, y, x + stepX, y + stepY, colors[2]);
+          } else {
+            drawLine(x, y, x + stepX, y + stepY, colors[0]);
+          }
+        }
         if (j > 0 && i < rows && i != 0 &&
-            grafico[i - 1][j - 1] != -1)  // Arriba-izquierda
-          drawLine(x, y, x - stepX, y + stepY);
+            grafico[i - 1][j - 1] != -1) {  // Arista Arriba-izquierda
+          if ((grafico[i][j] == 0 && grafico[i - 1][j - 1] == 1) ||
+              (grafico[i][j] == 1 && grafico[i - 1][j - 1] == 0)) {
+            drawLine(x, y, x - stepX, y + stepY, colors[3]);
+          } else if (grafico[i][j] == 1 && grafico[i - 1][j - 1] == 1) {
+            drawLine(x, y, x - stepX, y + stepY, colors[2]);
+          } else {
+            drawLine(x, y, x - stepX, y + stepY, colors[0]);
+          }
+        }
       }
-      if (grafico[i][j] == 0) {
+      if ((i == y1 && j == x1) || (i == y0 && j == x0)) {
+        drawPoint(x, y, colors[4]);  // Verde
+      } else if (grafico[i][j] == 0) {
         drawPoint(x, y, colors[0]);  // Blanco
       } else if (grafico[i][j] == -1) {
         drawPoint(x, y, colors[1]);  // Negro
-      } else {
+      } else if (grafico[i][j] == 1) {
         drawPoint(x, y, colors[2]);  // Rojo
       }
     }
@@ -364,12 +302,12 @@ void mouseClick(int button, int state, int x, int y) {
         y <= buttonY + buttonHeight) {
       buttonPressed = !buttonPressed;
       glutPostRedisplay();
-    } else if (x >= button2X && x <= button2X + button2Width && y >= button2Y &&
-               y <= button2Y + button2Height) {
+    } else if (x >= button2X && x <= button2X + buttonWidth && y >= button2Y &&
+               y <= button2Y + buttonHeight) {
       button2Pressed = !button2Pressed;
       glutPostRedisplay();
-    } else if (x >= button3X && x <= button3X + button3Width && y >= button3Y &&
-               y <= button3Y + button3Height) {
+    } else if (x >= button3X && x <= button3X + buttonWidth && y >= button3Y &&
+               y <= button3Y + buttonHeight) {
       button3Pressed = !button3Pressed;
       glutPostRedisplay();
     } else if (x >= submitButtonX - submitButtonWidth + 15 &&
@@ -378,38 +316,37 @@ void mouseClick(int button, int state, int x, int y) {
       submitButtonPressed = !submitButtonPressed;
       glutPostRedisplay();
     }
-    float stepX = windowWidth / static_cast<float>(cols);
+    float stepX = 60;  //  430 - 1570
     float stepY = windowHeight / static_cast<float>(rows);
-    for (int i = 0; i < rows; ++i) {
-      for (int j = 0; j < cols; ++j) {
-        float pointX = j * stepX + stepX / 2.0f + windowWidth / 3;
-        float pointY = windowHeight - (i * stepY + stepY / 2.0f);
-        if (x >= pointX - point_radius && x <= pointX + point_radius &&
-            y >= pointY - point_radius && y <= pointY + point_radius) {
-          grafico[i][j] = 2;  // Cambiar el color del punto a azul
-          glutPostRedisplay();
-          return;
+    // Verificar si se hizo clic en un punto
+    if (puntos_cant < 2) {
+      for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+          float pointX = 430 + j * stepX;
+          float pointY = windowHeight - (i * stepY + stepY / 2.0f);
+          if (x >= pointX - point_radius && x <= pointX + point_radius &&
+              y >= pointY - point_radius && y <= pointY + point_radius) {
+            grafico[i][j] = 1;
+            if (puntos_cant == 0) {
+              x0 = j;
+              y0 = i;
+            } else if (puntos_cant == 1) {
+              x1 = j;
+              y1 = i;
+            }
+            puntos_cant++;
+            glutPostRedisplay();
+            return;
+          }
         }
       }
     }
   }
 }
+
 // Función principal
 int main(int argc, char** argv) {
   cpuntos(puntos);
-  // crear aristas
-  for (int i = 0; i < puntos.size(); i++) {
-    for (int j = i + 1; j < puntos.size(); j++) {
-      bool casox = abs(puntos[i].x - puntos[j].x) <= 10;
-      bool casoy = abs(puntos[i].y - puntos[j].y) <= 10;
-      if (casox && casoy) {
-        arista temp(
-            &puntos[i], &puntos[j],
-            distancia(puntos[i].x, puntos[j].x, puntos[i].y, puntos[j].y));
-        aristas.push_back(temp);
-      }
-    }
-  }
 
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
