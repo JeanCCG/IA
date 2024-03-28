@@ -79,9 +79,6 @@ float colors[5][3] = {
     {0.0f, 0.0f, 1.0f},  // Azul
     {0.0f, 1.0f, 0.0f}   // Verde
 };
-bool buttonPressed = false;
-bool button2Pressed = false;
-bool button3Pressed = false;
 
 // Tamaño de un botón
 int buttonWidth = 100;
@@ -115,7 +112,6 @@ int submitButtonX = textBoxX + textBoxWidth + 10;
 int submitButtonY = textBoxY;
 int submitButtonWidth = 100;
 int submitButtonHeight = textBoxHeight;
-bool submitButtonPressed = false;
 
 // Función para dibujar texto en la pantalla
 void drawText(float x, float y, std::string text) {
@@ -150,39 +146,6 @@ void drawLine(float x1, float y1, float x2, float y2, float color[]) {
 
 // Función para dibujar el botón
 void drawButton(int x, int y, int width, int height, float color[]) {
-  // Botón
-  if (buttonPressed) {
-    srand(time(NULL));
-    for (int i = 0; i < 441 * cant / 100;) {
-      int temp = rand() % 441;
-      if (find(temp2.begin(), temp2.end(), temp) == temp2.end()) {
-        puntos_v[temp] = -1;
-        temp2.push_back(temp);
-        i++;
-      }
-    }
-    buttonPressed = !buttonPressed;
-  }
-  if (button2Pressed) {
-    float dist = 0;
-    HillClimbing(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10, y1 * 10);
-    button2Pressed = !button2Pressed;
-  }
-  if (button3Pressed) {
-    puntos.clear();
-    temp2.clear();
-    cpuntos(puntos);
-    puntos_v.assign(441, 0);
-    grafico.assign(21, vector<int>(21, 0));
-    puntos_cant = 0;
-    x0 = -1, y0 = -1;
-    x1 = -1, y1 = -1;
-    button3Pressed = !button3Pressed;
-  }
-  if (submitButtonPressed) {
-    cant = stoi(percentageInput);
-    submitButtonPressed = !submitButtonPressed;
-  }
   glColor3fv(color);
   glBegin(GL_QUADS);
   glVertex2i(x, y);
@@ -191,6 +154,7 @@ void drawButton(int x, int y, int width, int height, float color[]) {
   glVertex2i(x, y + height);
   glEnd();
 }
+
 void keyboard(unsigned char key, int x, int y) {
   if (key == 13) {  // ASCII de la tecla Enter
     // Agregar una nueva línea
@@ -219,7 +183,7 @@ void drawScene() {
 
   drawButton(buttonX, buttonY, buttonWidth, buttonHeight, buttonColor);
   drawButton(button2X, button2Y, buttonWidth, buttonHeight, colors[2]);
-  drawButton(button3X, button3Y, buttonWidth, buttonHeight, buttonColor);
+  drawButton(button3X, button3Y, buttonWidth, buttonHeight, colors[4]);
 
   // Dibujar caja de texto
   drawText(buttonX + buttonWidth + 10, buttonY + buttonHeight / 3,
@@ -299,21 +263,37 @@ void mouseClick(int button, int state, int x, int y) {
   if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
     // Verificar si se hizo clic en el botón
     if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY &&
-        y <= buttonY + buttonHeight) {
-      buttonPressed = !buttonPressed;
+        y <= buttonY + buttonHeight) {  // Botón borrar
+      srand(time(NULL));
+      for (int i = 0; i < 441 * cant / 100;) {
+        int temp = rand() % 441;
+        if (find(temp2.begin(), temp2.end(), temp) == temp2.end()) {
+          puntos_v[temp] = -1;
+          temp2.push_back(temp);
+          i++;
+        }
+      }
       glutPostRedisplay();
     } else if (x >= button2X && x <= button2X + buttonWidth && y >= button2Y &&
-               y <= button2Y + buttonHeight) {
-      button2Pressed = !button2Pressed;
+               y <= button2Y + buttonHeight) {  // Botón HillClimbing
+      float dist = 0;
+      HillClimbing(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10, y1 * 10);
       glutPostRedisplay();
     } else if (x >= button3X && x <= button3X + buttonWidth && y >= button3Y &&
-               y <= button3Y + buttonHeight) {
-      button3Pressed = !button3Pressed;
+               y <= button3Y + buttonHeight) {  // Botón Reiniciar
+      puntos.clear();
+      temp2.clear();
+      cpuntos(puntos);
+      puntos_v.assign(441, 0);
+      grafico.assign(21, vector<int>(21, 0));
+      puntos_cant = 0;
+      x0 = -1, y0 = -1;
+      x1 = -1, y1 = -1;
       glutPostRedisplay();
     } else if (x >= submitButtonX - submitButtonWidth + 15 &&
                x <= submitButtonX + 15 && y >= submitButtonY &&
-               y <= submitButtonY + submitButtonHeight) {
-      submitButtonPressed = !submitButtonPressed;
+               y <= submitButtonY + submitButtonHeight) {  // Botón de envío
+      cant = stoi(percentageInput);
       glutPostRedisplay();
     }
     float stepX = 60;  //  430 - 1570
@@ -325,7 +305,8 @@ void mouseClick(int button, int state, int x, int y) {
           float pointX = 430 + j * stepX;
           float pointY = windowHeight - (i * stepY + stepY / 2.0f);
           if (x >= pointX - point_radius && x <= pointX + point_radius &&
-              y >= pointY - point_radius && y <= pointY + point_radius) {
+              y >= pointY - point_radius &&
+              y <= pointY + point_radius) {  // Definir punto (Inicio-Final)
             grafico[i][j] = 1;
             if (puntos_cant == 0) {
               x0 = j;
@@ -344,10 +325,8 @@ void mouseClick(int button, int state, int x, int y) {
   }
 }
 
-// Función principal
-int main(int argc, char** argv) {
-  cpuntos(puntos);
-
+// Función para inicializar GLUT
+void inicializarGLUT(int argc, char** argv) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
   glutInitWindowSize(windowWidth, windowHeight);
@@ -361,6 +340,17 @@ int main(int argc, char** argv) {
   glutDisplayFunc(drawScene);
   glutKeyboardFunc(keyboard);
   glutMouseFunc(mouseClick);
+}
+
+// Función principal
+int main(int argc, char** argv) {
+  // Inicializar puntos
+  cpuntos(puntos);
+
+  // Inicializar GLUT
+  inicializarGLUT(argc, argv);
+
+  // Iniciar el bucle de eventos de GLUT
   glutMainLoop();
 
   return 0;
