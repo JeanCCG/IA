@@ -1,4 +1,3 @@
-
 #include <GL/freeglut.h>
 
 #include <algorithm>
@@ -103,6 +102,7 @@ int button3Y = windowHeight / 2 - buttonHeight / 2 - 2 * (buttonHeight + 20);
 // Caja de texto
 std::string percentageInput = "";
 
+
 // Función para dibujar texto en la pantalla
 void drawText(float x, float y, std::string text) {
   glRasterPos2f(x, y);
@@ -160,6 +160,7 @@ void keyboard(unsigned char key, int x, int y) {
   }
   glutPostRedisplay();
 }
+
 // Función para dibujar la escena
 void drawScene() {
   glClear(GL_COLOR_BUFFER_BIT);
@@ -178,9 +179,6 @@ void drawScene() {
   // Dibujar caja de texto
   drawText(buttonX + buttonWidth + 10, buttonY + buttonHeight / 3,
            "Borrar: " + toString(cant) + "%");
-  drawButton(submitButtonX, submitButtonY, submitButtonWidth,
-             submitButtonHeight, buttonColor);
-  drawText(textBoxX + 5, textBoxY + 5, "Porcentaje: " + percentageInput);
 
   // Dibujar puntos
   float stepX = windowWidth / static_cast<float>(cols);
@@ -279,11 +277,6 @@ void mouseClick(int button, int state, int x, int y) {
       puntos_cant = 0;
       x0 = -1, y0 = -1;
       x1 = -1, y1 = -1;
-      glutPostRedisplay();
-    } else if (x >= submitButtonX - submitButtonWidth + 15 &&
-               x <= submitButtonX + 15 && y >= submitButtonY &&
-               y <= submitButtonY + submitButtonHeight) {  // Botón de envío
-      cant = stoi(percentageInput);
       glutPostRedisplay();
     }
     float stepX = 60;  //  430 - 1570
