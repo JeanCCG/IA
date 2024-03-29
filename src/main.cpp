@@ -102,16 +102,6 @@ int button3Y = windowHeight / 2 - buttonHeight / 2 - 2 * (buttonHeight + 20);
 
 // Caja de texto
 std::string percentageInput = "";
-int textBoxX = 10;
-int textBoxY = 10;
-int textBoxWidth = 200;
-int textBoxHeight = 30;
-
-// Boton de envío
-int submitButtonX = textBoxX + textBoxWidth + 10;
-int submitButtonY = textBoxY;
-int submitButtonWidth = 100;
-int submitButtonHeight = textBoxHeight;
 
 // Función para dibujar texto en la pantalla
 void drawText(float x, float y, std::string text) {
