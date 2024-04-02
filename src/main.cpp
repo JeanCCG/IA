@@ -20,34 +20,6 @@ std::string toString(T val) {
   return oss.str();
 }
 
-// Hill Climbing
-void HillClimbing(vector<punto> puntos, vector<int>& puntos_v, float& dist,
-                  int x0, int y0, int x1, int y1) {
-  int sw = 1;
-  while (sw && (y0 != y1 || x0 != x1)) {
-    float dist_temp = INT_MAX, i_temp, x_temp, y_temp, suma = 0;
-    sw = 0;
-    for (int i = 0; i < puntos.size(); i++) {
-      bool casox = abs(puntos[i].x - x0) <= 10;
-      bool casoy = abs(puntos[i].y - y0) <= 10;
-      bool casoz = puntos[i].x == x0 && puntos[i].y == y0;
-      bool casod = distancia(x1, puntos[i].x, puntos[i].y, y1) < dist_temp;
-      if (puntos_v[i] == 0 && casox && casoy && !casoz && casod) {
-        i_temp = i;
-        dist_temp = distancia(x1, puntos[i].x, puntos[i].y, y1);
-        suma = distancia(x0, puntos[i].x, puntos[i].y, y0);
-        x_temp = puntos[i].x;
-        y_temp = puntos[i].y;
-        sw = 1;
-      }
-    }
-    x0 = x_temp;
-    y0 = y_temp;
-    puntos_v[i_temp] = 1;
-    dist += suma;
-  }
-}
-
 // Variables globales
 vector<vector<int>> grafico(21, vector<int>(21, 0));
 vector<punto> puntos;
@@ -56,7 +28,7 @@ int x0 = -1, y0 = -1;
 int x1 = -1, y1 = -1;
 int cant = 20;
 vector<int> temp2;
-
+float dist = 0;
 // Dimensiones de la ventana
 int windowWidth = 1600;
 int windowHeight = 900;
@@ -81,24 +53,45 @@ float colors[5][3] = {
 };
 
 // Tamaño de un botón
-int buttonWidth = 100;
+int buttonWidth = 170;
 int buttonHeight = 50;
 float buttonColor[3] = {0.5f, 0.5f, 0.5f};  // Gris
 
 // Color arista
 float lineColor[3] = {0.5f, 0.5f, 0.5f};  // Gris
 
-// Coordenadas del botón 1
+// Coordenadas del botón 1 Borrar
 int buttonX = 50;
 int buttonY = windowHeight / 2 - buttonHeight / 2;
 
-// Coordenadas del botón 2
+// Coordenadas del botón 2 Algoritmo
 int button2X = 50;
 int button2Y = windowHeight / 2 - buttonHeight / 2 - buttonHeight - 20;
 
-// Coordenadas del botón 3
+// Coordenadas del botón 3 Reiniciar
 int button3X = 50;
 int button3Y = windowHeight / 2 - buttonHeight / 2 - 2 * (buttonHeight + 20);
+
+// Coordenadas de los botones de búsqueda
+
+int buttonBX = 50;
+int buttonBY = windowHeight - 50 - buttonHeight;
+
+int buttonB2X = 50;
+int buttonB2Y = buttonBY - buttonHeight - 15;
+
+int buttonB3X = 50;
+int buttonB3Y = buttonB2Y - buttonHeight - 15;
+
+int buttonB4X = 50;
+int buttonB4Y = buttonB3Y - buttonHeight - 15;
+
+int buttonVal = 0;
+// Colores de los botones
+float buttonColorB[4][3] = {{1.0f, 0.0f, 0.0f},   // Rojo
+                            {1.0f, 0.5f, 0.0f},   // Naranja
+                            {1.0f, 1.0f, 0.0f},   // Amarillo
+                            {1.0f, 1.0f, 1.0f}};  // Blanco
 
 // Caja de texto
 std::string percentageInput = "";
@@ -114,7 +107,8 @@ int submitButtonWidth = 100;
 int submitButtonHeight = textBoxHeight;
 
 // Función para dibujar texto en la pantalla
-void drawText(float x, float y, std::string text) {
+void drawText(float x, float y, std::string text, float color[3]) {
+  glColor3fv(color);
   glRasterPos2f(x, y);
   for (char& c : text) {
     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, c);
@@ -180,18 +174,37 @@ void drawScene() {
       grafico[puntos[i].y / 10][puntos[i].x / 10] = -1;
     }
   }
+  drawButton(buttonBX, buttonBY, buttonWidth * 3 / 2, buttonHeight,
+             buttonColorB[0]);
+  drawText(buttonBX + 10, buttonBY + buttonHeight / 3, "BusquedaCiegaA",
+           colors[1]);
+  drawButton(buttonB2X, buttonB2Y, buttonWidth * 3 / 2, buttonHeight,
+             buttonColorB[1]);
+  drawText(buttonB2X + 10, buttonB2Y + buttonHeight / 3, "BusquedaCiegaP",
+           colors[1]);
+  drawButton(buttonB3X, buttonB3Y, buttonWidth * 3 / 2, buttonHeight,
+             buttonColorB[2]);
+  drawText(buttonB3X + 10, buttonB3Y + buttonHeight / 3, "HillClimbing",
+           colors[1]);
+  drawButton(buttonB4X, buttonB4Y, buttonWidth * 3 / 2, buttonHeight,
+             buttonColorB[3]);
+  drawText(buttonB4X + 10, buttonB4Y + buttonHeight / 3, "A*", colors[1]);
 
   drawButton(buttonX, buttonY, buttonWidth, buttonHeight, buttonColor);
-  drawButton(button2X, button2Y, buttonWidth, buttonHeight, colors[2]);
-  drawButton(button3X, button3Y, buttonWidth, buttonHeight, colors[4]);
+  drawButton(button2X, button2Y, buttonWidth, buttonHeight,
+             buttonColorB[buttonVal]);
+  drawButton(button3X, button3Y, buttonWidth, buttonHeight, buttonColor);
 
   // Dibujar caja de texto
-  drawText(buttonX + buttonWidth + 10, buttonY + buttonHeight / 3,
-           "Borrar: " + toString(cant) + "%");
+  drawText(buttonX + 10, buttonY + buttonHeight / 3,
+           "Borrar " + toString(cant) + "%", colors[0]);
+  drawText(button3X + 10, button3Y + buttonHeight / 3, "Reiniciar", colors[0]);
   drawButton(submitButtonX, submitButtonY, submitButtonWidth,
              submitButtonHeight, buttonColor);
-  drawText(textBoxX + 5, textBoxY + 5, "Porcentaje: " + percentageInput);
-
+  drawText(textBoxX + 5, textBoxY + 5, "Porcentaje: " + percentageInput,
+           buttonColor);
+  drawText(button2X + buttonWidth + 5, button2Y + 18,
+           "Distancia: " + toString(dist), colors[0]);
   // Dibujar puntos
   float stepX = windowWidth / static_cast<float>(cols);
   float stepY = windowHeight / static_cast<float>(rows);
@@ -262,8 +275,20 @@ void mouseClick(int button, int state, int x, int y) {
   y = windowHeight - y;
   if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
     // Verificar si se hizo clic en el botón
-    if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY &&
-        y <= buttonY + buttonHeight) {  // Botón borrar
+    if (x >= buttonBX && x <= buttonBX + buttonWidth * 3 / 2 && y >= buttonBY &&
+        y <= buttonBY + buttonHeight) {
+      buttonVal = 0;
+    } else if (x >= buttonB2X && x <= buttonB2X + buttonWidth * 3 / 2 &&
+               y >= buttonB2Y && y <= buttonB2Y + buttonHeight) {
+      buttonVal = 1;
+    } else if (x >= buttonB3X && x <= buttonB3X + buttonWidth * 3 / 2 &&
+               y >= buttonB3Y && y <= buttonB3Y + buttonHeight) {
+      buttonVal = 2;
+    } else if (x >= buttonB4X && x <= buttonB4X + buttonWidth * 3 / 2 &&
+               y >= buttonB4Y && y <= buttonB4Y + buttonHeight) {
+      buttonVal = 3;
+    } else if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY &&
+               y <= buttonY + buttonHeight) {  // Botón borrar
       srand(time(NULL));
       for (int i = 0; i < 441 * cant / 100;) {
         int temp = rand() % 441;
@@ -276,11 +301,20 @@ void mouseClick(int button, int state, int x, int y) {
       glutPostRedisplay();
     } else if (x >= button2X && x <= button2X + buttonWidth && y >= button2Y &&
                y <= button2Y + buttonHeight) {  // Botón HillClimbing
-      float dist = 0;
-      HillClimbing(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10, y1 * 10);
+      if (buttonVal == 0) {
+        BCiegaA(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10, y1 * 10);
+      } else if (buttonVal == 1) {
+        BCiegaP(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10, y1 * 10);
+      } else if (buttonVal == 2) {
+        HillClimbing(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10,
+                     y1 * 10);
+      } else if (buttonVal == 3) {
+        AA(puntos, puntos_v, dist, x0 * 10, y0 * 10, x1 * 10, y1 * 10);
+      }
       glutPostRedisplay();
     } else if (x >= button3X && x <= button3X + buttonWidth && y >= button3Y &&
                y <= button3Y + buttonHeight) {  // Botón Reiniciar
+      dist = 0;
       puntos.clear();
       temp2.clear();
       cpuntos(puntos);
