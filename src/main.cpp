@@ -1,4 +1,3 @@
-
 #include <GL/freeglut.h>
 
 #include <algorithm>
@@ -164,6 +163,7 @@ void keyboard(unsigned char key, int x, int y) {
   }
   glutPostRedisplay();
 }
+
 // Función para dibujar la escena
 void drawScene() {
   glClear(GL_COLOR_BUFFER_BIT);
@@ -324,11 +324,10 @@ void mouseClick(int button, int state, int x, int y) {
       x0 = -1, y0 = -1;
       x1 = -1, y1 = -1;
       glutPostRedisplay();
-    } else if (x >= submitButtonX - submitButtonWidth + 15 &&
-               x <= submitButtonX + 15 && y >= submitButtonY &&
-               y <= submitButtonY + submitButtonHeight) {  // Botón de envío
+    } else if (x >= submitButtonX - 50 &&
+               x <= submitButtonX - 50 + submitButtonWidth &&
+               y >= submitButtonY && y <= submitButtonY + submitButtonHeight) {
       cant = stoi(percentageInput);
-      glutPostRedisplay();
     }
     float stepX = 60;  //  430 - 1570
     float stepY = windowHeight / static_cast<float>(rows);
